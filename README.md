@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/mgduk/mc-array.svg?branch=master)](https://travis-ci.org/mgduk/mc-array)
+[![GitHub issues](https://img.shields.io/github/issues/mgduk/mc-array.svg)](https://github.com/mgduk/mc-array/issues)
+
 `mc-array` makes it easy to store an array of string and non-string values in [memcached](https://memcached.org/). Great for caching to achieve high performance in your app.
 
 Adds support for storing and retrieving arrays of values into a single key in memcached. Values can be strings, arrays, objects, whatever.
