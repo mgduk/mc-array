@@ -1,0 +1,39 @@
+{
+  "name": "mc-array",
+  "version": "1.0.0",
+  "description": "Makes it easy to store an array of string and non-string values in memcache",
+  "main": "lib/mc-array.js",
+  "scripts": {
+    "test": "mocha",
+    "prepublish": "coffee -c -o lib/ src/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgduk/mc-array.git"
+  },
+  "keywords": [
+    "memcache",
+    "memcached",
+    "array",
+    "set",
+    "collection"
+  ],
+  "author": "Matt Dolan <matt@dolan.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mgduk/mc-array/issues"
+  },
+  "homepage": "https://github.com/mgduk/mc-array#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "coffee-script": "^1.10.0",
+    "expect": "^1.16.0",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3",
+    "sinon-chai": "^2.8.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.3.4"
+  }
+}
