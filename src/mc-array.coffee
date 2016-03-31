@@ -1,6 +1,6 @@
 Promise = require 'bluebird'
 
-# This module allows arrays of string values to be stored in memcached
+# This module allows arrays of values to be stored in memcached
 #
 # Features include
 #  - values can be added and removed from the array with a single append call
