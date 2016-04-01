@@ -49,10 +49,12 @@ class mc_array
         values = []
         garbage = 0
         if s and typeof s is 'string'
-            for v in s.split ' ' when v isnt ''
-                op = v[0]
-                b = new Buffer v.substring(1), 'base64'
-                value = JSON.parse b.toString()
+            tokens = s.split ' '
+            for token in tokens when token isnt ''
+                op = token[0]
+                value = token.substring(1)
+                # for now, we handle them as base64 strings so we can
+                # compare them easily
                 if op is @ADD_OP
                     values.push value
                 else if op is @REMOVE_OP
@@ -61,8 +63,12 @@ class mc_array
                     values.splice position, 1 unless position is -1
                     garbage++
 
-        garbage: garbage,
-        values: values
+        # decode the values
+        values = for value in values
+            b = new Buffer value, 'base64'
+            JSON.parse b.toString()
+
+        garbage: garbage, values: values
 
     # returns a promise that resolves to a boolean indicating store success
     modify: (op, values) ->
