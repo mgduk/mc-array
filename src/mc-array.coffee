@@ -74,19 +74,20 @@ class mc_array
     modify: (op, values) ->
         return new Promise (resolve, reject) =>
             encoded = @encodeSet values, op
-            @cache.append @key, encoded, (err, status) =>
-                return reject err if err
+            resolve @cache.append @key, encoded, (err, status) =>
                 if status is 'STORED'
-                    return resolve true
+                    return true
                 else
                     # item removed from empty value is successful as
                     # the item is not there
-                    return resolve true unless op is @ADD_OP
+                    return true unless op is @ADD_OP
                     # If we can't append, and we're adding to the set,
                     # we are trying to create the index, so do that.
                     @cache.set @key, encoded, (err, status) ->
                         return reject err if err
-                        return resolve status is 'STORED'
+                        return status is 'STORED'
+        .catch ->
+            reject "Error writing to memcache"
 
     # Add the given value or array of values to the given array
     #
@@ -112,9 +113,9 @@ class mc_array
     get: (forceCompacting = false) ->
         return new Promise (resolve, reject) =>
             @cache.gets @key, (err, response) =>
-                return reject err if err
-                return resolve [] unless response?[@key]
-                # 'cas' is 'check and store' ID, to ensure
+                return resolve [] if err
+
+                # 'cas' is the 'check and store' ID, to ensure
                 # we only write back if no other client has written
                 # to this key in the meantime
                 {cas, val: data} = response[@key]
@@ -127,6 +128,6 @@ class mc_array
                     # uncompacted until next time
                     @cache.cas @key, cas, compacted
 
-                resolve values
+                return resolve values
 
 module.exports = mc_array
