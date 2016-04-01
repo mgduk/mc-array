@@ -126,7 +126,7 @@ class mc_array
                     compacted = @encodeSet values
                     # hit and hope — worst case is that the value remains
                     # uncompacted until next time
-                    @cache.cas @key, cas, compacted
+                    @cache.cas @key, cas, compacted, (err, response) ->
 
                 return resolve values
 
