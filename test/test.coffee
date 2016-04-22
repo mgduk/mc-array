@@ -93,7 +93,8 @@ describe 'mc-array', ->
         it 'calls cache.set() for an empty set', ->
             sinon.spy cache, 'set'
             colours.add 'blue'
-            cache.set.should.have.been.calledWith 'colours', '*ImJsdWUi '
+            .then () ->
+                cache.set.should.have.been.calledWith 'colours', '*ImJsdWUi '
 
         it 'does not call cache.set() for an non-empty set', ->
             colours.add 'blue'
@@ -166,34 +167,40 @@ describe 'mc-array', ->
 
         it 'retrieves the correct items back from mixed adds/removes', ->
             colours.add 'red'
-            colours.add ['blue', 'green']
-            colours.remove 'blue'
-            colours.get().should.eventually.eql ['red', 'green']
+            .then -> colours.add ['blue', 'green']
+            .then -> colours.remove 'blue'
+            .then ->
+                colours.get().should.eventually.eql ['red', 'green']
 
         it 're-encodes the values when the number of items exceeds GARBAGE_THRESHOLD', ->
             colours.GARBAGE_THRESHOLD = 5
             colours.add ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'voilet']
-            colours.remove ['red', 'orange', 'yellow', 'green', 'blue', 'indigo']
-            sinon.spy colours, 'encodeSet'
-            colours.get()
-            colours.encodeSet.should.have.been.calledWith ['voilet']
+            .then -> colours.remove ['red', 'orange', 'yellow', 'green', 'blue', 'indigo']
+            .then ->
+                sinon.spy colours, 'encodeSet'
+                colours.get()
+                .then ->
+                    colours.encodeSet.should.have.been.calledWith ['voilet']
 
         it 're-encodes the values if forceCompacting is true', ->
-            colours.add ['red']
             sinon.spy colours, 'encodeSet'
-            colours.get true
-            colours.encodeSet.should.have.been.calledWith ['red']
+            colours.add ['red']
+            .then ->
+                colours.get true
+                colours.encodeSet.should.have.been.calledWith ['red']
 
         it 'calls cache.cas when the data has been compacted', ->
             sinon.spy cache, 'cas'
             colours.add ['red']
-            colours.get true
-            cache.cas.should.have.been.calledWith 'colours', 'cas', '*InJlZCI= '
+            .then -> colours.get true
+            .then ->
+                cache.cas.should.have.been.calledWith 'colours', 'cas', '*InJlZCI= '
 
         it 'gets an object back correctly', ->
             o = {foo: 'bar', baz: 12}
             colours.add o
-            colours.get().should.eventually.eql [o]
+            .then ->
+                colours.get().should.eventually.eql [o]
 
         it 'gets an array of mixed values back correctly', ->
             a = [{foo: 'bar', baz: 12}, {56: 90}, 'sponge']
@@ -201,9 +208,11 @@ describe 'mc-array', ->
             s1 = 'whatever'
             s2 = '"whatever"'
             colours.add [a, s2, s1, o]
-            colours.get().should.eventually.eql [a, s2, s1, o]
+            .then ->
+                colours.get().should.eventually.eql [a, s2, s1, o]
 
         it 'gets an already JSON encoded string back correctly', ->
             s = '"my value"'
             colours.add [s]
-            colours.get().should.eventually.eql [s]
+            .then ->
+                colours.get().should.eventually.eql [s]
