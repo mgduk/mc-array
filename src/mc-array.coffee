@@ -24,6 +24,8 @@ class mc_array
     # Requires an instance of mc.Client from the 'mc' memcache package
     # key is the string key under which data is stored in memcache
     constructor: (@cache, @key) ->
+        # convert nodeback-style methods to return promises
+        @cache[func] = Promise.promisify @cache[func] for func in ['append', 'set', 'gets', 'cas']
 
     # Encode an array of values to modify the set.
     #
@@ -71,29 +73,26 @@ class mc_array
         garbage: garbage, values: values
 
     # returns a promise that resolves to a boolean indicating store success
-    modify: (op, values) ->
-        return new Promise (resolve, reject) =>
-            encoded = @encodeSet values, op
-            resolve @cache.append @key, encoded, (err, status) =>
-                if status is 'STORED'
-                    return true
-                else
-                    # item removed from empty value is successful as
-                    # the item is not there
-                    return true unless op is @ADD_OP
-                    # If we can't append, and we're adding to the set,
-                    # we are trying to create the index, so do that.
-                    @cache.set @key, encoded, (err, status) ->
-                        return reject err if err
-                        return status is 'STORED'
-        .catch ->
-            reject "Error writing to memcache"
+    modify: (op, values) =>
+        encoded = @encodeSet values, op
+        @cache.append @key, encoded
+        .then (status) =>
+            # item removed from empty value is successful as
+            # the item is not there
+            if status is 'STORED' or op isnt @ADD_OP
+                return true
+            # If we can't append, and we're adding to the set,
+            # we are trying to create the index, so do that.
+            else
+                return @cache.set @key, encoded
+                .then (status) ->
+                    return status is 'STORED'
 
     # Add the given value or array of values to the given array
     #
     # string|array values
     # Returns a promise that resolves to a success boolean
-    add: (values) ->
+    add: (values) =>
         values = [values] unless Array.isArray values
         @modify @ADD_OP, values
 
@@ -101,7 +100,7 @@ class mc_array
     #
     # string|array values
     # Returns a promise that resolves to a success boolean
-    remove: (values) ->
+    remove: (values) =>
         values = [values] unless Array.isArray values
         @modify @REMOVE_OP, values
 
@@ -110,24 +109,24 @@ class mc_array
     # too dirty.
     #
     # Returns a promise that resolves to an array of strings
-    get: (forceCompacting = false) ->
-        return new Promise (resolve, reject) =>
-            @cache.gets @key, (err, response) =>
-                return resolve [] if err
+    get: (forceCompacting = false) =>
+        @cache.gets @key
+        .catch (err) =>
+            return []
+        .then (response) =>
+            # 'cas' is the 'check and store' ID, to ensure
+            # we only write back if no other client has written
+            # to this key in the meantime
+            {cas, val: data} = response[@key]
 
-                # 'cas' is the 'check and store' ID, to ensure
-                # we only write back if no other client has written
-                # to this key in the meantime
-                {cas, val: data} = response[@key]
+            {garbage, values} = @decodeSet data
 
-                {garbage, values} = @decodeSet data
+            if forceCompacting or garbage > @GARBAGE_THRESHOLD
+                compacted = @encodeSet values
+                # hit and hope — worst case is that the value remains
+                # uncompacted until next time
+                @cache.cas @key, cas, compacted
 
-                if forceCompacting or garbage > @GARBAGE_THRESHOLD
-                    compacted = @encodeSet values
-                    # hit and hope — worst case is that the value remains
-                    # uncompacted until next time
-                    @cache.cas @key, cas, compacted, (err, response) ->
-
-                return resolve values
+            return values
 
 module.exports = mc_array
