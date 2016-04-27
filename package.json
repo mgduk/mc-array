@@ -4,7 +4,7 @@
     "email": "matt@dolan.me"
   },
   "name": "mc-array",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Makes it easy to store an array of string and non-string values in memcached",
   "main": "lib/mc-array.js",
   "scripts": {
