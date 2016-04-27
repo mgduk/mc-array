@@ -115,6 +115,8 @@ class mc_array
         .catch (err) =>
             return []
         .then (response) =>
+            return [] unless response?[@key]
+
             # 'cas' is the 'check and store' ID, to ensure
             # we only write back if no other client has written
             # to this key in the meantime
