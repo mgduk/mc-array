@@ -76,6 +76,7 @@ class mc_array
     modify: (op, values) =>
         encoded = @encodeSet values, op
         @cache.append @key, encoded
+        .catch (e) => e.type
         .then (status) =>
             # item removed from empty value is successful as
             # the item is not there
